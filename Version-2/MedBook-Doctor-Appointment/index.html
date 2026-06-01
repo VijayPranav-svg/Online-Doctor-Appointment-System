@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedBook — Online Doctor Appointments</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <!-- Icons via CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+<!-- ========== TOAST NOTIFICATION ========== -->
+<div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+<!-- ========== NAVBAR ========== -->
+<nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
+  <div class="nav-container">
+    <a href="#" class="nav-logo" onclick="showPage('home')" aria-label="MedBook home">
+      <span class="logo-icon"><i class="fas fa-heartbeat"></i></span>
+      <span class="logo-text">Med<b>Book</b></span>
+    </a>
+
+    <ul class="nav-links" id="navLinks" role="list">
+      <li><a href="#" onclick="showPage('home')" class="nav-link active" data-page="home">Home</a></li>
+      <li><a href="#" onclick="showPage('search')" class="nav-link" data-page="search">Find Doctors</a></li>
+      <li><a href="#" onclick="showPage('help')" class="nav-link" data-page="help">Help</a></li>
+      <li id="navDashLink" style="display:none"><a href="#" onclick="showPage('dashboard')" class="nav-link" data-page="dashboard">Dashboard</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <!-- Multi-language toggle -->
+      <button class="btn-icon" id="langToggle" onclick="toggleLanguage()" title="Switch language" aria-label="Toggle language">
+        <i class="fas fa-globe"></i>
+        <span id="langLabel">EN</span>
+      </button>
+      <!-- Dark mode toggle -->
+      <button class="btn-icon" id="darkToggle" onclick="toggleDark()" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+      </button>
+      <!-- Emergency -->
+      <button class="btn-emergency" onclick="handleEmergency()" aria-label="Emergency call">
+        <i class="fas fa-ambulance"></i> <span data-i18n="emergency">Emergency</span>
+      </button>
+      <!-- Auth -->
+      <button class="btn-primary" id="authBtn" onclick="showPage('login')" aria-label="Login or signup">
+        <i class="fas fa-user"></i> <span data-i18n="login">Login</span>
+      </button>
+      <button class="btn-icon" id="logoutBtn" style="display:none" onclick="logout()" aria-label="Logout">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+
+    <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ========== PAGES WRAPPER ========== -->
+<main id="appRoot">
+
+  <!-- ===== PAGE: HOME ===== -->
+  <section id="page-home" class="page active" aria-label="Home page">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-content">
+        <div class="badge-pill"><i class="fas fa-shield-alt"></i> Trusted by 50,000+ patients</div>
+        <h1 class="hero-title" data-i18n="heroTitle">Your Health,<br /><span class="accent">Simplified.</span></h1>
+        <p class="hero-sub" data-i18n="heroSub">Book verified doctors instantly. No waiting rooms, no hassle.</p>
+
+        <!-- HCI: Search is top priority — Inverted Pyramid -->
+        <div class="search-bar-hero" role="search" aria-label="Doctor search">
+          <div class="search-inner">
+            <button class="voice-btn" onclick="voiceSearch()" title="Voice search" aria-label="Voice search">
+              <i class="fas fa-microphone"></i>
+            </button>
+            <input type="text" id="heroSearch" placeholder="Search by name, specialty, symptom…" class="search-input" aria-label="Search doctors" oninput="liveSearchSuggest(this.value)" autocomplete="off" />
+            <button class="btn-primary search-go" onclick="doHeroSearch()" aria-label="Search">
+              <i class="fas fa-search"></i> <span data-i18n="search">Search</span>
+            </button>
+          </div>
+          <div id="searchSuggestions" class="search-suggestions" role="listbox" aria-label="Search suggestions"></div>
+        </div>
+
+        <!-- Symptom Checker shortcut -->
+        <div class="hero-quick-links">
+          <button class="quick-chip" onclick="showPage('symptom')" aria-label="Check symptoms">
+            <i class="fas fa-stethoscope"></i> <span data-i18n="checkSymptoms">Check Symptoms</span>
+          </button>
+          <button class="quick-chip" onclick="showPage('compare')" aria-label="Compare doctors">
+            <i class="fas fa-balance-scale"></i> Compare Doctors
+          </button>
+          <button class="quick-chip" onclick="showPage('search')" aria-label="Instant booking">
+            <i class="fas fa-bolt"></i> Instant Booking
+          </button>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hero-card-float card-float-1">
+          <i class="fas fa-check-circle" style="color:var(--green)"></i> Appointment Confirmed
+        </div>
+        <div class="hero-card-float card-float-2">
+          <i class="fas fa-star" style="color:#f59e0b"></i> 4.9 avg rating
+        </div>
+        <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=480&q=80" alt="Doctor smiling" class="hero-img" loading="lazy" />
+      </div>
+    </div>
+
+    <!-- Notification Cards (Smart Notifications HCI) -->
+    <div class="notifications-strip" id="notifStrip">
+      <div class="notif-card notif-info">
+        <i class="fas fa-bell"></i>
+        <span>Reminder: Your appointment with <b>Dr. Priya Sharma</b> is tomorrow at 10:00 AM</span>
+        <button onclick="this.parentElement.remove()" aria-label="Dismiss notification">✕</button>
+      </div>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="stats-strip">
+      <div class="stat-item"><span class="stat-num">200+</span><span class="stat-label" data-i18n="statDoctors">Doctors</span></div>
+      <div class="stat-item"><span class="stat-num">50K+</span><span class="stat-label">Patients</span></div>
+      <div class="stat-item"><span class="stat-num">98%</span><span class="stat-label">Satisfaction</span></div>
+      <div class="stat-item"><span class="stat-num">24/7</span><span class="stat-label">Support</span></div>
+    </div>
+
+    <!-- Categories — Gestalt: Similarity + Proximity -->
+    <section class="section" aria-labelledby="catHeading">
+      <div class="section-header">
+        <h2 id="catHeading" data-i18n="specialties">Browse by Specialty</h2>
+        <a href="#" onclick="showPage('search')" class="see-all">See all <i class="fas fa-arrow-right"></i></a>
+      </div>
+      <div class="categories-grid" id="categoriesGrid" role="list" aria-label="Medical specialties"></div>
+    </section>
+
+    <!-- Featured Doctors -->
+    <section class="section" aria-labelledby="featHeading">
+      <div class="section-header">
+        <h2 id="featHeading" data-i18n="featuredDoctors">Top Rated Doctors</h2>
+        <a href="#" onclick="showPage('search')" class="see-all">View all <i class="fas fa-arrow-right"></i></a>
+      </div>
+      <div class="doctors-grid" id="featuredDoctors" role="list" aria-label="Featured doctors"></div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section how-it-works" aria-labelledby="howHeading">
+      <h2 id="howHeading" class="text-center">How It Works</h2>
+      <div class="steps-row">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <i class="fas fa-search step-icon"></i>
+          <h3>Find a Doctor</h3>
+          <p>Search by specialty, symptom, or name</p>
+        </div>
+        <div class="step-divider" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <i class="fas fa-calendar-alt step-icon"></i>
+          <h3>Book a Slot</h3>
+          <p>Pick a time that suits you</p>
+        </div>
+        <div class="step-divider" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <i class="fas fa-video step-icon"></i>
+          <h3>Consult</h3>
+          <p>Meet your doctor online or in-person</p>
+        </div>
+        <div class="step-divider" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <i class="fas fa-file-medical step-icon"></i>
+          <h3>Get Prescription</h3>
+          <p>Receive digital prescription instantly</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gamification: streak badge -->
+    <div class="gamification-banner" id="gameBanner" style="display:none">
+      <i class="fas fa-fire" style="color:#f59e0b"></i>
+      <span>🎉 Health Streak: <b id="streakCount">3</b> appointments kept! You've earned a <b>Wellness Star</b> badge.</span>
+      <button onclick="document.getElementById('gameBanner').style.display='none'" aria-label="Dismiss">✕</button>
+    </div>
+
+  </section>
+
+  <!-- ===== PAGE: LOGIN / SIGNUP ===== -->
+  <section id="page-login" class="page" aria-label="Login page">
+    <div class="auth-wrapper">
+      <div class="auth-card">
+        <div class="auth-header">
+          <span class="logo-icon"><i class="fas fa-heartbeat"></i></span>
+          <h2 id="authTitle" data-i18n="welcomeBack">Welcome Back</h2>
+          <p id="authSubtitle">Sign in to your account</p>
+        </div>
+
+        <!-- Tab Toggle: Login / Signup -->
+        <div class="auth-tabs" role="tablist" aria-label="Authentication options">
+          <button class="auth-tab active" id="tabLogin" role="tab" aria-selected="true" onclick="switchAuthTab('login')">Login</button>
+          <button class="auth-tab" id="tabSignup" role="tab" aria-selected="false" onclick="switchAuthTab('signup')">Sign Up</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="auth-form" novalidate aria-label="Login form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label for="loginEmail">Email Address</label>
+            <div class="input-wrap">
+              <i class="fas fa-envelope input-icon"></i>
+              <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" aria-required="true" />
+            </div>
+            <span class="field-error" id="loginEmailErr" role="alert"></span>
+          </div>
+          <div class="form-group">
+            <label for="loginPass">Password</label>
+            <div class="input-wrap">
+              <i class="fas fa-lock input-icon"></i>
+              <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" aria-required="true" />
+              <button type="button" class="pass-toggle" onclick="togglePass('loginPass')" aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
+            </div>
+            <span class="field-error" id="loginPassErr" role="alert"></span>
+          </div>
+          <div class="form-row-space">
+            <label class="checkbox-label"><input type="checkbox" id="rememberMe" /> Remember me</label>
+            <a href="#" class="link-small">Forgot password?</a>
+          </div>
+          <button type="submit" class="btn-primary btn-full btn-lg">
+            <i class="fas fa-sign-in-alt"></i> Sign In
+          </button>
+        </form>
+
+        <!-- Signup Form -->
+        <form id="signupForm" class="auth-form hidden" novalidate aria-label="Signup form" onsubmit="handleSignup(event)">
+          <div class="form-group">
+            <label for="signupName">Full Name</label>
+            <div class="input-wrap">
+              <i class="fas fa-user input-icon"></i>
+              <input type="text" id="signupName" placeholder="Arun Kumar" autocomplete="name" aria-required="true" />
+            </div>
+            <span class="field-error" id="signupNameErr" role="alert"></span>
+          </div>
+          <div class="form-group">
+            <label for="signupEmail">Email Address</label>
+            <div class="input-wrap">
+              <i class="fas fa-envelope input-icon"></i>
+              <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email" aria-required="true" />
+            </div>
+            <span class="field-error" id="signupEmailErr" role="alert"></span>
+          </div>
+          <div class="form-group">
+            <label for="signupPass">Password</label>
+            <div class="input-wrap">
+              <i class="fas fa-lock input-icon"></i>
+              <input type="password" id="signupPass" placeholder="Min 8 characters" autocomplete="new-password" aria-required="true" />
+              <button type="button" class="pass-toggle" onclick="togglePass('signupPass')" aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
+            </div>
+            <span class="field-error" id="signupPassErr" role="alert"></span>
+            <div class="password-strength" id="passStrength"></div>
+          </div>
+          <div class="form-group">
+            <label for="signupPhone">Phone (optional)</label>
+            <div class="input-wrap">
+              <i class="fas fa-phone input-icon"></i>
+              <input type="tel" id="signupPhone" placeholder="+91 98765 43210" autocomplete="tel" />
+            </div>
+          </div>
+          <button type="submit" class="btn-primary btn-full btn-lg">
+            <i class="fas fa-user-plus"></i> Create Account
+          </button>
+        </form>
+
+        <p class="auth-footer-text">Demo credentials: <b>user@demo.com / demo123</b></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PAGE: DASHBOARD ===== -->
+  <section id="page-dashboard" class="page" aria-label="Dashboard page">
+    <div class="page-container">
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#" onclick="showPage('home')">Home</a> <i class="fas fa-chevron-right"></i> Dashboard
+      </nav>
+
+      <div class="dashboard-header">
+        <div>
+          <h1 id="dashGreeting">Good morning, Arun! 👋</h1>
+          <p class="text-muted">Here's your health overview</p>
+        </div>
+        <!-- Serial Position: Primary action first -->
+        <button class="btn-primary" onclick="showPage('search')">
+          <i class="fas fa-plus"></i> Book Appointment
+        </button>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="dash-stats-row">
+        <div class="dash-stat-card">
+          <i class="fas fa-calendar-check" style="color:var(--blue)"></i>
+          <div>
+            <span class="stat-big" id="totalAppts">4</span>
+            <span class="text-muted">Total Appointments</span>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <i class="fas fa-clock" style="color:var(--orange)"></i>
+          <div>
+            <span class="stat-big">1</span>
+            <span class="text-muted">Upcoming</span>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <i class="fas fa-star" style="color:#f59e0b"></i>
+          <div>
+            <span class="stat-big">🌟</span>
+            <span class="text-muted">Wellness Star Badge</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <!-- Upcoming Appointments -->
+        <div class="dash-section">
+          <h3><i class="fas fa-calendar-alt"></i> Upcoming Appointments</h3>
+          <div id="upcomingAppts"></div>
+        </div>
+
+        <!-- Recent Doctors + Rebooking -->
+        <div class="dash-section">
+          <h3><i class="fas fa-history"></i> Recent Doctors</h3>
+          <div id="recentDoctors"></div>
+        </div>
+      </div>
+
+      <!-- Appointment Timeline -->
+      <div class="dash-section mt-2">
+        <h3><i class="fas fa-stream"></i> Appointment Timeline</h3>
+        <div class="timeline" id="apptTimeline"></div>
+      </div>
+
+      <!-- Privacy Settings shortcut -->
+      <div class="privacy-card">
+        <i class="fas fa-user-shield"></i>
+        <div>
+          <b>Privacy & Settings</b>
+          <p class="text-muted small">Manage your data, notifications, and preferences</p>
+        </div>
+        <button class="btn-secondary" onclick="showPage('profile')">Manage</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PAGE: SEARCH / FIND DOCTORS ===== -->
+  <section id="page-search" class="page" aria-label="Search doctors page">
+    <div class="page-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#" onclick="showPage('home')">Home</a> <i class="fas fa-chevron-right"></i> Find Doctors
+      </nav>
+      <h1 data-i18n="findDoctor">Find a Doctor</h1>
+
+      <!-- Filters — Hick's Law: reduce choices -->
+      <div class="search-filters-bar" role="search" aria-label="Doctor filters">
+        <div class="filter-search-wrap">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Name, specialty, symptom…" oninput="filterDoctors()" aria-label="Search doctors" />
+        </div>
+        <select id="filterSpec" onchange="filterDoctors()" aria-label="Filter by specialization">
+          <option value="">All Specialties</option>
+        </select>
+        <select id="filterRating" onchange="filterDoctors()" aria-label="Filter by rating">
+          <option value="">All Ratings</option>
+          <option value="4.5">4.5+</option>
+          <option value="4.0">4.0+</option>
+        </select>
+        <select id="filterType" onchange="filterDoctors()" aria-label="Filter by type">
+          <option value="">Online & In-person</option>
+          <option value="online">Online Only</option>
+          <option value="in-person">In-person Only</option>
+        </select>
+        <button class="btn-icon" onclick="clearFilters()" title="Clear filters" aria-label="Clear all filters">
+          <i class="fas fa-times"></i> Clear
+        </button>
+      </div>
+
+      <!-- Compare bar -->
+      <div class="compare-bar" id="compareBar" style="display:none" role="status" aria-live="polite">
+        <span><i class="fas fa-balance-scale"></i> <span id="compareCount">0</span> doctors selected</span>
+        <button class="btn-primary btn-sm" onclick="showPage('compare')">Compare Now</button>
+        <button class="btn-icon btn-sm" onclick="clearCompare()">Clear</button>
+      </div>
+
+      <!-- Results -->
+      <div class="results-meta" id="resultsMeta" aria-live="polite"></div>
+      <div class="doctors-grid" id="searchResults" role="list" aria-label="Doctor search results"></div>
+      <!-- Empty state -->
+      <div id="emptyState" class="empty-state hidden" aria-live="polite">
+        <i class="fas fa-user-md empty-icon"></i>
+        <h3>No doctors found</h3>
+        <p>Try adjusting your filters or search term</p>
+        <button class="btn-secondary" onclick="clearFilters()">Clear Filters</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PAGE: DOCTOR PROFILE ===== -->
+  <section id="page-doctor" class="page" aria-label="Doctor profile page">
+    <div class="page-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#" onclick="showPage('home')">Home</a> <i class="fas fa-chevron-right"></i>
+        <a href="#" onclick="showPage('search')">Find Doctors</a> <i class="fas fa-chevron-right"></i>
+        <span id="docBreadcrumb">Doctor Profile</span>
+      </nav>
+      <div id="doctorProfileContent"></div>
+    </div>
+  </section>
+
+  <!-- ===== PAGE: BOOKING ===== -->
+  <section id="page-booking" class="page" aria-label="Book appointment page">
+    <div class="page-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#" onclick="showPage('home')">Home</a> <i class="fas fa-chevron-right"></i>
+        <a href="#" onclick="showPage('search')">Find Doctors</a> <i class="fas fa-chevron-right"></i>
+        Booking
+      </nav>
+      <h1>Book Appointment</h1>
+      <div class="booking-layout">
+        <!-- Doctor summary -->
+        <div class="booking-doc-summary" id="bookingDocSummary"></div>
+        <!-- Booking form -->
+        <div class="booking-form-card">
+          <div class="form-group">
+            <label for="bookDate"><i class="fas fa-calendar"></i> Select Date</label>
+            <input type="date" id="bookDate" onchange="loadSlots()" aria-required="true" />
+            <span class="field-error" id="bookDateErr" role="alert"></span>
+          </div>
+          <div class="form-group" id="slotsSection" style="display:none">
+            <label><i class="fas fa-clock"></i> Available Time Slots</label>
+            <div id="timeSlots" class="slots-grid" role="group" aria-label="Available time slots"></div>
+            <span class="field-error" id="bookSlotErr" role="alert"></span>
+          </div>
+          <div class="form-group">
+            <label for="bookReason"><i class="fas fa-notes-medical"></i> Reason for Visit</label>
+            <textarea id="bookReason" rows="3" placeholder="Describe your symptoms or reason…" maxlength="300"></textarea>
+            <div class="char-count" id="reasonCount">0/300</div>
+          </div>
+          <div class="form-group">
+            <label for="consultType"><i class="fas fa-video"></i> Consultation Type</label>
+            <div class="radio-group" role="group" aria-label="Consultation type">
+              <label class="radio-label"><input type="radio" name="consultType" value="online" checked /> <i class="fas fa-video"></i> Online</label>
+              <label class="radio-label"><input type="radio" name="consultType" value="in-person" /> <i class="fas fa-hospital"></i> In-Person</label>
+            </div>
+          </div>
+          <!-- Wait time indicator -->
+          <div class="wait-time-indicator" id="waitTimeBox" style="display:none">
+            <i class="fas fa-hourglass-half"></i>
+            <span>Estimated wait: <b id="waitTimeVal">~10 min</b></span>
+          </div>
+          <button class="btn-primary btn-full btn-lg" onclick="confirmBooking()">
+            <i class="fas fa-check-circle"></i> Confirm Appointment
+          </button>
+          <p class="cancel-policy"><i class="fas fa-info-circle"></i> Free cancellation up to 2 hours before appointment</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PAGE: CONFIRMATION ===== -->
+  <section id="page-confirm" class="page" aria-label="Confirmation page">
+    <div class="page-container confirm-page">
+      <div class="confirm-card">
+        <!-- HCI: Success feedback — green color psychology -->
+        <div class="confirm-icon-wrap">
+          <i class="fas fa-check-circle confirm-check"></i>
+        </div>
+        <h2 data-i18n="appointmentConfirmed">Appointment Confirmed!</h2>
+        <p class="text-muted">You'll receive a confirmation on your email.</p>
+        <div class="confirm-details" id="confirmDetails"></div>
+        <div class="confirm-actions">
+          <button class="btn-primary" onclick="showPage('dashboard')"><i class="fas fa-th-large"></i> Go to Dashboard</button>
+          <button class="btn-secondary" onclick="showPage('home')"><i class="fas fa-home"></i> Home</button>
+        </div>
+        <div class="offline-sim-note" id="offlineNote" style="display:none">
+          <i class="fas fa-wifi-slash"></i> You appear to be offline. Appointment saved locally.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PAGE: USER PROFILE ===== -->
+  <section id="page-profile" class="page" aria-label="User profile page">
+    <div class="page-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#" onclick="showPage('home')">Home</a> <i class="fas fa-chevron-right"></i> My Profile
+      </nav>
+      <div class="profile-header">
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&q=80" alt="User avatar" class="profile-avatar" />
+        <div>
+          <h1 id="profileName">Arun Kumar</h1>
+          <p class="text-muted" id="profileEmail">user@demo.com</p>
+          <div class="badge-pill badge-small"><i class="fas fa-star"></i> Wellness Star</div>
+        </div>
+        <button class="btn-secondary" onclick="editProfile()"><i class="fas fa-edit"></i> Edit Profile</button>
+      </div>
+
+      <div class="profile-tabs" role="tablist" aria-label="Profile sections">
+        <button class="profile-tab active" onclick="switchProfileTab('history')" role="tab" aria-selected="true">Appointment History</button>
+        <button class="profile-tab" onclick="switchProfileTab('privacy')" role="tab" aria-selected="false">Privacy Settings</button>
+      </div>
+
+      <!-- History Tab -->
+      <div id="profileHistoryTab">
+        <div id="appointmentHistory" class="history-list"></div>
+      </div>
+
+      <!-- Privacy Tab -->
+      <div id="profilePrivacyTab" class="hidden">
+        <div class="privacy-settings-card">
+          <h3>Privacy & Notifications</h3>
+          <div class="privacy-toggle-row">
+            <span>Email reminders</span>
+            <label class="toggle-switch" aria-label="Toggle email reminders">
+              <input type="checkbox" checked onchange="toast('Setting saved', 'success')" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="privacy-toggle-row">
+            <span>SMS notifications</span>
+            <label class="toggle-switch" aria-label="Toggle SMS notifications">
+              <input type="checkbox" checked onchange="toast('Setting saved', 'success')" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="privacy-toggle-row">
+            <span>Share health data for research</span>
+            <label class="toggle-switch" aria-label="Toggle health data sharing">
+              <input type="checkbox" onchange="toast('Setting saved', 'success')" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="privacy-toggle-row">
+            <span>Allow anonymous analytics</span>
+            <label class="toggle-switch" aria-label="Toggle analytics">
+              <input type="checkbox" checked onchange="toast('Setting saved', 'success')" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <button class="btn-danger mt-1" onclick="toast('Account deletion request sent', 'error')">Delete My Account</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PAGE: SYMPTOM CHECKER ===== -->
+  <section id="page-symptom" class="page" aria-label="Symptom checker page">
+    <div class="page-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#" onclick="showPage('home')">Home</a> <i class="fas fa-chevron-right"></i> Symptom Checker
+      </nav>
+      <div class="symptom-checker">
+        <div class="symptom-header">
+          <i class="fas fa-stethoscope" style="font-size:2.5rem;color:var(--blue)"></i>
+          <h2>AI Symptom Checker</h2>
+          <p class="text-muted">Tell us your symptoms and we'll suggest the right specialist</p>
+        </div>
+        <div class="symptom-tags-area" id="selectedSymptoms" aria-label="Selected symptoms" aria-live="polite"></div>
+        <div class="symptom-input-area">
+          <input type="text" id="symptomInput" placeholder="Type a symptom (e.g. headache, fever…)" oninput="symptomAutocomplete(this.value)" aria-label="Enter symptom" aria-autocomplete="list" aria-controls="symptomDropdown" />
+          <div id="symptomDropdown" class="symptom-dropdown" role="listbox" aria-label="Symptom suggestions"></div>
+        </div>
+        <div class="symptom-common">
+          <p>Common symptoms:</p>
+          <div class="symptom-chips" id="commonSymptomChips"></div>
+        </div>
+        <button class="btn-primary btn-lg" onclick="checkSymptoms()" style="margin-top:1rem">
+          <i class="fas fa-search-plus"></i> Find Specialist
+        </button>
+        <div class="symptom-result" id="symptomResult" style="display:none"></div>
+        <p class="disclaimer"><i class="fas fa-info-circle"></i> This is not a medical diagnosis. Please consult a doctor for professional advice.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PAGE: COMPARE DOCTORS ===== -->
+  <section id="page-compare" class="page" aria-label="Compare doctors page">
+    <div class="page-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#" onclick="showPage('home')">Home</a> <i class="fas fa-chevron-right"></i> Compare Doctors
+      </nav>
+      <h1>Compare Doctors</h1>
+      <p class="text-muted">Select up to 3 doctors to compare side by side</p>
+      <div id="compareContent"></div>
+    </div>
+  </section>
+
+  <!-- ===== PAGE: HELP & SUPPORT ===== -->
+  <section id="page-help" class="page" aria-label="Help and support page">
+    <div class="page-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#" onclick="showPage('home')">Home</a> <i class="fas fa-chevron-right"></i> Help & Support
+      </nav>
+      <h1>Help & Support</h1>
+
+      <!-- FAQ -->
+      <div class="faq-section" id="faqSection" aria-label="Frequently asked questions"></div>
+
+      <!-- Chat Support UI -->
+      <div class="chat-support-section">
+        <h3><i class="fas fa-comments"></i> Chat with Support</h3>
+        <div class="chat-window" id="chatWindow" aria-label="Chat messages" aria-live="polite">
+          <div class="chat-msg bot">
+            <img src="https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=40&q=80" alt="Support agent" class="chat-avatar" />
+            <div class="chat-bubble">Hi! I'm here to help. How can I assist you today?</div>
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="Type your message…" aria-label="Chat message input" onkeydown="if(event.key==='Enter') sendChatMsg()" />
+          <button class="btn-primary" onclick="sendChatMsg()" aria-label="Send message"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PAGE: CHAT WITH DOCTOR ===== -->
+  <section id="page-chat" class="page" aria-label="Chat with doctor page">
+    <div class="page-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#" onclick="showPage('home')">Home</a> <i class="fas fa-chevron-right"></i> Chat
+      </nav>
+      <div class="doctor-chat-wrapper">
+        <div class="chat-doc-info" id="chatDocInfo"></div>
+        <div class="chat-window doctor-chat-window" id="docChatWindow" aria-label="Doctor chat messages" aria-live="polite"></div>
+        <div class="chat-input-row">
+          <input type="text" id="docChatInput" placeholder="Type a message…" aria-label="Message to doctor" onkeydown="if(event.key==='Enter') sendDocMsg()" />
+          <button class="btn-primary" onclick="sendDocMsg()" aria-label="Send to doctor"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ========== FOOTER ========== -->
+<footer class="footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="logo-icon"><i class="fas fa-heartbeat"></i></span>
+      <b>MedBook</b>
+      <p class="text-muted small">Connecting patients with trusted doctors</p>
+    </div>
+    <div class="footer-links">
+      <h4>Quick Links</h4>
+      <a href="#" onclick="showPage('home')">Home</a>
+      <a href="#" onclick="showPage('search')">Find Doctors</a>
+      <a href="#" onclick="showPage('symptom')">Symptom Checker</a>
+      <a href="#" onclick="showPage('help')">Help & Support</a>
+    </div>
+    <div class="footer-links">
+      <h4>Legal</h4>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Cookie Policy</a>
+    </div>
+    <div class="footer-contact">
+      <h4>Contact</h4>
+      <p><i class="fas fa-envelope"></i> support@medbook.in</p>
+      <p><i class="fas fa-phone"></i> 1800-MED-BOOK</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 MedBook. All rights reserved. | Built with HCI Principles.</p>
+  </div>
+</footer>
+
+<!-- Emergency Modal -->
+<div class="modal-overlay" id="emergencyModal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="emergencyTitle">
+  <div class="modal-card emergency-modal">
+    <div class="emergency-icon-wrap"><i class="fas fa-ambulance"></i></div>
+    <h2 id="emergencyTitle">Emergency Services</h2>
+    <p>If this is a life-threatening emergency, please call immediately:</p>
+    <a href="tel:108" class="btn-emergency btn-lg btn-full"><i class="fas fa-phone"></i> Call 108 (Ambulance)</a>
+    <a href="tel:112" class="btn-emergency btn-lg btn-full mt-1"><i class="fas fa-phone"></i> Call 112 (National Emergency)</a>
+    <button class="btn-secondary btn-full mt-1" onclick="closeEmergencyModal()">Close</button>
+  </div>
+</div>
+
+<!-- Offline indicator -->
+<div class="offline-banner" id="offlineBanner" style="display:none" role="status" aria-live="assertive">
+  <i class="fas fa-wifi-slash"></i> You're offline. Some features may be limited.
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

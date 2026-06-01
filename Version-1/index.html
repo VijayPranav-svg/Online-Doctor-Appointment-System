@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Online Doctor Appointment System</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div class="app-shell">
+        <header class="topbar" role="banner">
+            <div class="brand">
+                <button class="menu-toggle" aria-label="Open navigation menu">☰</button>
+                <div>
+                    <p class="eyebrow">Trusted Health Booking</p>
+                    <h1>CareConnect</h1>
+                </div>
+            </div>
+            <nav class="main-nav" aria-label="Primary navigation">
+                <button data-target="home" class="nav-link active">Home</button>
+                <button data-target="search" class="nav-link">Find Doctor</button>
+                <button data-target="dashboard" class="nav-link">Dashboard</button>
+                <button data-target="profile" class="nav-link">Profile</button>
+                <button data-target="help" class="nav-link">Help</button>
+            </nav>
+            <div class="top-actions">
+                <button id="voiceBtn" class="action-btn" aria-label="Start voice search">🎙</button>
+                <button id="langToggle" class="action-btn" aria-label="Toggle language">தமிழ்</button>
+                <button id="themeToggle" class="action-btn" aria-label="Toggle dark mode">🌙</button>
+                <button id="emergencyBtn" class="emergency-btn">Emergency</button>
+            </div>
+        </header>
+
+        <aside class="side-panel" aria-label="Quick actions and notifications">
+            <div class="panel-card panel-summary">
+                <h2>Quick Actions</h2>
+                <button class="primary-btn small-btn" data-target="search">Search Doctors</button>
+                <button class="secondary-btn small-btn" data-target="home">Symptom Checker</button>
+                <button class="secondary-btn small-btn" data-target="help">Support</button>
+            </div>
+            <div class="panel-card" id="notificationPanel">
+                <h2>Smart Notifications</h2>
+                <div class="notification-card success">New doctor slots open near you.</div>
+                <div class="notification-card info">You have 1 appointment in 2 days.</div>
+            </div>
+            <div class="panel-card panel-status" id="offlineBanner" hidden>
+                <h2>Offline Mode</h2>
+                <p>Some features are unavailable. Check your connection.</p>
+            </div>
+        </aside>
+
+        <main class="content" id="content" role="main">
+            <section id="home" class="page active-page" aria-labelledby="homeHeading">
+                <div class="hero-card">
+                    <div class="hero-copy">
+                        <p class="eyebrow">Book with confidence</p>
+                        <h2 id="homeHeading">Find trusted doctors in minutes</h2>
+                        <p>Fast appointments, clear availability, and guided medical support for every stage of your
+                            care journey.</p>
+                        <div class="hero-actions">
+                            <button class="primary-btn" data-target="search">Search Doctors</button>
+                            <button class="secondary-btn" data-target="help">Need Help?</button>
+                        </div>
+                    </div>
+                    <div class="hero-image" aria-hidden="true">
+                        <img src="https://images.unsplash.com/photo-1580281657521-35a2f658dd58?auto=format&fit=crop&w=800&q=80"
+                            alt="Doctor consulting patient" />
+                    </div>
+                </div>
+
+                <form id="homeSearchForm" class="search-bar" aria-label="Search doctors">
+                    <label for="homeSearchInput" class="visually-hidden">Search doctors or symptoms</label>
+                    <input id="homeSearchInput" type="search" placeholder="Search specialists, symptoms, doctors" />
+                    <button type="submit" class="primary-btn">Search</button>
+                </form>
+
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Doctor Categories</p>
+                        <h3>Choose a care path</h3>
+                    </div>
+                    <p class="section-meta">Popular specialties based on your recent activity.</p>
+                </div>
+                <div class="category-grid" id="categoryGrid"></div>
+
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Featured Doctors</p>
+                        <h3>High-rated specialists nearby</h3>
+                    </div>
+                    <p class="section-meta">Trusted professionals with positive patient feedback.</p>
+                </div>
+                <div class="card-grid" id="featuredDoctors"></div>
+
+                <div class="section-block">
+                    <div class="info-card">
+                        <h3>Symptom Checker</h3>
+                        <p>Type your symptoms and get the right specialization recommendation.</p>
+                        <form id="symptomForm" class="symptom-form">
+                            <label for="symptomInput">Symptoms</label>
+                            <input id="symptomInput" type="text" placeholder="e.g. headache, chest pain" required />
+                            <button class="primary-btn" type="submit">Check</button>
+                        </form>
+                        <p class="hint-text" id="symptomResult"></p>
+                    </div>
+                    <div class="info-card accent-card">
+                        <h3>Health Streak</h3>
+                        <div class="streak-badge">7 Days Active</div>
+                        <p>Stay engaged and maintain your wellness routine with badges, reminders, and fast bookings.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="auth" class="page" aria-labelledby="authHeading">
+                <div class="page-header">
+                    <div>
+                        <p class="eyebrow">Secure access</p>
+                        <h2 id="authHeading">Login or Signup</h2>
+                    </div>
+                    <nav aria-label="Authentication navigation" class="breadcrumb">
+                        <span class="breadcrumb-item active">Login</span>
+                        <span class="breadcrumb-separator">›</span>
+                        <span class="breadcrumb-item">Signup</span>
+                    </nav>
+                </div>
+                <div class="auth-grid">
+                    <div class="auth-card">
+                        <h3>Welcome Back</h3>
+                        <form id="loginForm" novalidate>
+                            <label for="loginEmail">Email</label>
+                            <input id="loginEmail" type="email" placeholder="you@example.com" required />
+                            <span class="error-msg" id="loginEmailError"></span>
+
+                            <label for="loginPassword">Password</label>
+                            <input id="loginPassword" type="password" placeholder="••••••••" required minlength="6" />
+                            <span class="error-msg" id="loginPasswordError"></span>
+
+                            <button type="submit" class="primary-btn full-width">Login</button>
+                        </form>
+                    </div>
+                    <div class="auth-card secondary-card">
+                        <h3>New Here?</h3>
+                        <form id="signupForm" novalidate>
+                            <label for="signupName">Full Name</label>
+                            <input id="signupName" type="text" placeholder="Your name" required />
+                            <span class="error-msg" id="signupNameError"></span>
+
+                            <label for="signupEmail">Email</label>
+                            <input id="signupEmail" type="email" placeholder="you@example.com" required />
+                            <span class="error-msg" id="signupEmailError"></span>
+
+                            <label for="signupPassword">Create Password</label>
+                            <input id="signupPassword" type="password" placeholder="••••••••" required minlength="6" />
+                            <span class="error-msg" id="signupPasswordError"></span>
+
+                            <button type="submit" class="secondary-btn full-width">Sign Up</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <section id="dashboard" class="page" aria-labelledby="dashboardHeading">
+                <div class="page-header">
+                    <div>
+                        <p class="eyebrow">Your personalized dashboard</p>
+                        <h2 id="dashboardHeading">Hello, <span id="userNameDisplay">Guest</span></h2>
+                        <p class="section-meta">Everything you need to manage care with one click.</p>
+                    </div>
+                    <div class="status-pill">Streak: <strong id="streakCount">7</strong> days</div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="panel-card">
+                        <h3>Upcoming Appointments</h3>
+                        <div id="upcomingList"></div>
+                    </div>
+                    <div class="panel-card accent-card">
+                        <h3>Suggested Doctors</h3>
+                        <div id="suggestedDoctors"></div>
+                    </div>
+                </div>
+
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Booking Timeline</p>
+                        <h3>Your recent activity</h3>
+                    </div>
+                </div>
+                <div class="timeline" id="appointmentTimeline"></div>
+            </section>
+
+            <section id="search" class="page" aria-labelledby="searchHeading">
+                <div class="page-header">
+                    <div>
+                        <p class="eyebrow">Explore providers</p>
+                        <h2 id="searchHeading">Doctor Search</h2>
+                    </div>
+                    <nav class="breadcrumb" aria-label="Search breadcrumb">
+                        <span class="breadcrumb-item">Home</span>
+                        <span class="breadcrumb-separator">›</span>
+                        <span class="breadcrumb-item active">Search</span>
+                    </nav>
+                </div>
+
+                <form id="searchForm" class="search-filters" aria-label="Doctor search filters">
+                    <div class="filter-row">
+                        <label for="searchQuery">Search</label>
+                        <div class="input-with-icon">
+                            <input id="searchQuery" type="search" placeholder="Search by name, specialty or symptom" />
+                            <button type="button" id="voiceSearchBtn" class="icon-btn"
+                                aria-label="Voice search">🎙</button>
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <label for="filterSpecialization">Specialization</label>
+                        <select id="filterSpecialization">
+                            <option value="">All specializations</option>
+                        </select>
+                    </div>
+                    <div class="filter-row">
+                        <label for="filterRating">Minimum rating</label>
+                        <select id="filterRating">
+                            <option value="">Any rating</option>
+                            <option value="4.5">4.5+</option>
+                            <option value="4.7">4.7+</option>
+                            <option value="5.0">5.0</option>
+                        </select>
+                    </div>
+                    <div class="filter-actions">
+                        <button type="submit" class="primary-btn">Apply Filters</button>
+                        <button type="button" id="clearFiltersBtn" class="secondary-btn">Clear</button>
+                    </div>
+                </form>
+
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Compare doctors</p>
+                        <h3>Pick the best match</h3>
+                    </div>
+                    <p class="section-meta">Compare two doctors side by side for more confidence.</p>
+                </div>
+                <div class="comparison-panel" id="comparisonPanel"></div>
+
+                <div class="card-grid" id="doctorResults"></div>
+            </section>
+
+            <section id="profile" class="page" aria-labelledby="profileHeading">
+                <div class="page-header">
+                    <div>
+                        <p class="eyebrow">Your health hub</p>
+                        <h2 id="profileHeading">User Profile</h2>
+                    </div>
+                    <button class="secondary-btn" data-target="dashboard">Book Again</button>
+                </div>
+
+                <div class="profile-grid">
+                    <div class="panel-card">
+                        <h3>Account</h3>
+                        <p><strong>Name:</strong> <span id="profileName">Guest User</span></p>
+                        <p><strong>Email:</strong> <span id="profileEmail">guest@careconnect.com</span></p>
+                        <button class="primary-btn" id="editProfileBtn">Edit Profile</button>
+                    </div>
+                    <div class="panel-card accent-card">
+                        <h3>Privacy Settings</h3>
+                        <label class="toggle-row"><span>Share analytics</span><input type="checkbox" id="shareAnalytics"
+                                checked /></label>
+                        <label class="toggle-row"><span>Appointment reminders</span><input type="checkbox"
+                                id="appointmentReminders" checked /></label>
+                        <label class="toggle-row"><span>Dark mode auto</span><input type="checkbox"
+                                id="autoDarkMode" /></label>
+                    </div>
+                </div>
+
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Appointment history</p>
+                        <h3>Past visits and reuse</h3>
+                    </div>
+                </div>
+                <div class="history-grid" id="historyList"></div>
+            </section>
+
+            <section id="help" class="page" aria-labelledby="helpHeading">
+                <div class="page-header">
+                    <div>
+                        <p class="eyebrow">Support when you need it</p>
+                        <h2 id="helpHeading">Help & Support</h2>
+                    </div>
+                    <button class="secondary-btn" data-target="auth">Login</button>
+                </div>
+
+                <div class="help-grid">
+                    <div class="panel-card">
+                        <h3>FAQ</h3>
+                        <div class="faq-item"><button class="faq-toggle">How do I book an appointment?</button>
+                            <p class="faq-answer">Search a doctor, choose an available slot, and confirm your booking.
+                            </p>
+                        </div>
+                        <div class="faq-item"><button class="faq-toggle">Can I reschedule?</button>
+                            <p class="faq-answer">Yes — use the dashboard or appointment history to rebook with one
+                                click.</p>
+                        </div>
+                        <div class="faq-item"><button class="faq-toggle">Is my data secure?</button>
+                            <p class="faq-answer">Yes — privacy settings let you control what is shared.</p>
+                        </div>
+                    </div>
+                    <div class="panel-card accent-card">
+                        <h3>Chat Simulation</h3>
+                        <div class="chat-window" aria-live="polite" aria-label="Chat with doctor simulation">
+                            <div class="chat-bubble incoming">Hi! How can I help you today?</div>
+                            <div class="chat-bubble outgoing">I would like advice about my symptoms.</div>
+                            <div class="chat-bubble incoming">I recommend booking a consultation with a general
+                                physician or cardiologist.</div>
+                        </div>
+                        <button class="primary-btn" id="startChatBtn">Start Chat</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="doctorProfile" class="page" aria-labelledby="profileDoctorHeading">
+                <div class="page-header">
+                    <div>
+                        <p class="eyebrow">Doctor details</p>
+                        <h2 id="profileDoctorHeading">Doctor Profile</h2>
+                    </div>
+                    <nav class="breadcrumb" aria-label="Doctor profile breadcrumb">
+                        <span class="breadcrumb-item" data-target="search">Search</span>
+                        <span class="breadcrumb-separator">›</span>
+                        <span class="breadcrumb-item active">Profile</span>
+                    </nav>
+                </div>
+                <div class="detail-panel">
+                    <div class="doctor-summary">
+                        <img id="profileImage" src="" alt="Doctor profile image" />
+                        <div>
+                            <h3 id="profileDoctorName">Dr. Name</h3>
+                            <p id="profileDoctorSpecialty">Specialization</p>
+                            <div class="doctor-rating"><span id="profileDoctorRating">4.9</span> ★ | <span
+                                    id="profileDoctorExperience">12</span> yrs</div>
+                            <p id="profileDoctorBio">Expert in patient-centered care with friendly consultations and
+                                clear advice.</p>
+                        </div>
+                    </div>
+                    <div class="doctor-meta">
+                        <div class="meta-card"><span>Wait time</span><strong id="waitTime">10 mins</strong></div>
+                        <div class="meta-card"><span>Location</span><strong id="doctorLocation">City Clinic</strong>
+                        </div>
+                        <div class="meta-card success"><span>Patient score</span><strong id="patientScore">98%</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Available Slots</p>
+                        <h3>Choose your preferred time</h3>
+                    </div>
+                </div>
+                <div class="slot-grid" id="slotGrid"></div>
+
+                <button class="primary-btn large-btn" id="bookNowBtn">Book Now</button>
+            </section>
+
+            <section id="booking" class="page" aria-labelledby="bookingHeading">
+                <div class="page-header">
+                    <div>
+                        <p class="eyebrow">Appointment booking</p>
+                        <h2 id="bookingHeading">Confirm your visit</h2>
+                    </div>
+                    <nav class="breadcrumb" aria-label="Booking breadcrumb">
+                        <span class="breadcrumb-item" data-target="doctorProfile">Profile</span>
+                        <span class="breadcrumb-separator">›</span>
+                        <span class="breadcrumb-item active">Booking</span>
+                    </nav>
+                </div>
+                <div class="booking-card">
+                    <div class="booking-left">
+                        <label for="appointmentDate">Select Date</label>
+                        <input id="appointmentDate" type="date" min="2026-04-29" />
+
+                        <div class="slot-grid" id="bookingSlotGrid"></div>
+                    </div>
+                    <div class="booking-right">
+                        <h3>Appointment Details</h3>
+                        <p><strong>Doctor:</strong> <span id="bookingDoctorName">Dr. Name</span></p>
+                        <p><strong>Specialty:</strong> <span id="bookingDoctorSpecialty">General Physician</span></p>
+                        <p><strong>Selected slot:</strong> <span id="selectedSlotText">None</span></p>
+                        <div class="privacy-notice">
+                            <p><strong>Need help?</strong> You can change your appointment up to 2 hours before the
+                                time.</p>
+                        </div>
+                        <button class="primary-btn full-width" id="confirmBookingBtn" disabled>Confirm
+                            Appointment</button>
+                        <span class="error-msg" id="bookingError"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="confirmation" class="page" aria-labelledby="confirmationHeading">
+                <div class="confirmation-card success-card">
+                    <div class="status-badge success">Confirmed</div>
+                    <h2 id="confirmationHeading">Appointment Booked</h2>
+                    <p>Your appointment is confirmed. A reminder has been sent to your email.</p>
+                    <div class="confirmation-details">
+                        <p><strong>Doctor:</strong> <span id="confirmDoctorName">Dr. Name</span></p>
+                        <p><strong>Date:</strong> <span id="confirmDate">May 1, 2026</span></p>
+                        <p><strong>Time:</strong> <span id="confirmTime">10:00 AM</span></p>
+                        <p><strong>Location:</strong> <span id="confirmLocation">City Clinic</span></p>
+                    </div>
+                    <div class="confirmation-actions">
+                        <button class="primary-btn" data-target="dashboard">Go to Dashboard</button>
+                        <button class="secondary-btn" data-target="search">Book Another</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
